@@ -9,7 +9,7 @@ from tfx.orchestration.beam.beam_dag_runner import BeamDagRunner
 PIPELINE_NAME = 'diabetes-pipeline'
 
 # Pipeline inputs.
-DATA_ROOT = 'data/'
+DATA_ROOT = 'data'
 TRANSFORM_MODULE_FILE = 'modules/transform.py'
 TUNER_MODULE_FILE = 'modules/tuner.py'
 TRAINER_MODULE_FILE = 'modules/trainer.py'
@@ -28,7 +28,7 @@ def init_local_pipeline(
     logging.info(f'Pipeline root set to: {pipeline_root}')
     beam_args = [
         '--direct_running_mode=multi_processing',
-        '--direct_num_workers=0'
+        '--direct_num_workers=1'
     ]
 
     return pipeline.Pipeline(
@@ -48,7 +48,7 @@ if __name__ == '__main__':
     from modules.components import init_components
 
     components = init_components(
-        DATA_ROOT,
+        data_dir=DATA_ROOT,
         transform_module=TRANSFORM_MODULE_FILE,
         tuner_module=TUNER_MODULE_FILE,
         training_module=TRAINER_MODULE_FILE,
