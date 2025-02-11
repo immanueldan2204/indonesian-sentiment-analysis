@@ -8,7 +8,6 @@ from keras.layers import (
     Input,
     concatenate,
     Dense,
-    BatchNormalization,
     Dropout
 )
 from keras.callbacks import EarlyStopping
@@ -44,7 +43,7 @@ def gzip_reader_fn(filenames):
 def input_fn(
         file_pattern,
         tf_transform_output,
-        batch_size=64
+        batch_size=128
     ) -> tf.data.Dataset:
     '''
     Generates features and labels for tuning/training.
@@ -97,11 +96,15 @@ def tuner_model(hp):
     # Define dense layers as a Sequential model.
     dense_layers = tf.keras.models.Sequential([
         Dense(
-            hp.Choice('dense_units', values=[128, 256, 512]), 
+            hp.Choice('dense_units_1', values=[128, 256, 512]), 
             activation='relu'
         ),
-        BatchNormalization(),
-        Dropout(hp.Float('dropout_rate', min_value=0.1, max_value=0.5, step=0.1)),
+        Dropout(hp.Float('dropout_rate_1', min_value=0.1, max_value=0.5, step=0.1)),
+        Dense(
+            hp.Choice('dense_units_2', values=[128, 256, 512]), 
+            activation='relu'
+        ),
+        Dropout(hp.Float('dropout_rate_2', min_value=0.1, max_value=0.5, step=0.1)),
         Dense(1, activation='sigmoid')
     ], name='dense_stack')
     
@@ -140,7 +143,7 @@ def tuner_fn(fn_args: FnArgs) -> TunerFnResult:
     tuner = kt.Hyperband(
         tuner_model,
         objective='val_binary_accuracy',
-        max_epochs=10,
+        max_epochs=5,
         factor=3,
         directory=fn_args.working_dir,
         project_name='diabetes_kt_hyperband'

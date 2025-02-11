@@ -8,7 +8,6 @@ from keras.layers import (
     Input,
     concatenate,
     Dense,
-    BatchNormalization,
     Dropout
 )
 from keras.callbacks import TensorBoard, EarlyStopping, ModelCheckpoint
@@ -45,9 +44,10 @@ def trainer_model(hp):
 
     # Define dense layers as a Sequential model.
     dense_layers = tf.keras.models.Sequential([
-        Dense(hp['dense_units'], activation='relu'),
-        BatchNormalization(),
-        Dropout(hp['dropout_rate']),
+        Dense(hp['dense_units_1'], activation='relu'),
+        Dropout(hp['dropout_rate_1']),
+        Dense(hp['dense_units_2'], activation='relu'),
+        Dropout(hp['dropout_rate_2']),
         Dense(1, activation='sigmoid')
     ], name='dense_stack')
     

@@ -111,10 +111,6 @@ def init_components(
         ],
         metrics_specs=[
             tfma.MetricsSpec(metrics=[
-                tfma.MetricConfig(class_name='ExampleCount'),
-                tfma.MetricConfig(class_name='AUC'),
-                tfma.MetricConfig(class_name='Precision'),
-                tfma.MetricConfig(class_name='Recall'),
                 tfma.MetricConfig(
                     class_name='BinaryAccuracy',
                     threshold=tfma.MetricThreshold(
