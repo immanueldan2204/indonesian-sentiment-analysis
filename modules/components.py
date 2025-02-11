@@ -1,4 +1,3 @@
-'''Initiate tfx pipeline components.'''
 
 import os
 
@@ -9,6 +8,7 @@ from tfx.components import (
     SchemaGen,
     ExampleValidator,
     Transform,
+    Tuner,
     Trainer,
     Evaluator,
     Pusher
@@ -24,9 +24,10 @@ from tfx.dsl.input_resolution.strategies.latest_blessed_model_strategy import (
 def init_components(
         data_dir,
         transform_module,
+        tuner_module,
         training_module,
-        # training_steps,
-        # eval_steps,
+        training_steps,
+        eval_steps,
         serving_model_dir
     ):
     '''
@@ -35,6 +36,7 @@ def init_components(
     Args:
         data_dir (str): Path to the data.
         transform_module (str): Path to the transform module.
+        tuner_module (str): Path to the tuner module.
         training_module (str): Path to the training module.
         training_steps (int): Number of training steps.
         eval_steps (int): Number of evaluation steps.
@@ -68,17 +70,31 @@ def init_components(
         module_file=os.path.abspath(transform_module)
     )
 
+    tuner = Tuner(
+        module_file=os.path.abspath(tuner_module),
+        examples=transform.outputs['transformed_examples'],
+        transform_graph=transform.outputs['transform_graph'],
+        schema=schema_gen.outputs['schema'],
+        train_args=trainer_pb2.TrainArgs(
+            splits=['train'],
+            num_steps=training_steps),
+        eval_args=trainer_pb2.EvalArgs(
+            splits=['eval'],
+            num_steps=eval_steps)
+    )
+
     trainer = Trainer(
         module_file=os.path.abspath(training_module),
         examples=transform.outputs['transformed_examples'],
         transform_graph=transform.outputs['transform_graph'],
         schema=schema_gen.outputs['schema'],
+        hyperparameters=tuner.outputs['best_hyperparameters'],
         train_args=trainer_pb2.TrainArgs(
-            splits=['train'],)
-            # num_steps=training_steps),
+            splits=['train'],
+            num_steps=training_steps),
         eval_args=trainer_pb2.EvalArgs(
-            splits=['eval'],)
-            # num_steps=eval_steps)
+            splits=['eval'],
+            num_steps=eval_steps)
     )
     
     model_resolver = Resolver(
@@ -88,17 +104,17 @@ def init_components(
     ).with_id('Latest_blessed_model_resolver')
 
     eval_config = tfma.EvalConfig(
-        model_specs=[tfma.ModelSpec(label_key='generated')],
+        model_specs=[tfma.ModelSpec(label_key='diabetes')],
         slicing_specs=[
             tfma.SlicingSpec(),
-            tfma.SlicingSpec(feature_keys=['generated'])
+            tfma.SlicingSpec(feature_keys=['diabetes'])
         ],
         metrics_specs=[
             tfma.MetricsSpec(metrics=[
+                tfma.MetricConfig(class_name='ExampleCount'),
                 tfma.MetricConfig(class_name='AUC'),
                 tfma.MetricConfig(class_name='Precision'),
                 tfma.MetricConfig(class_name='Recall'),
-                tfma.MetricConfig(class_name='ExampleCount'),
                 tfma.MetricConfig(
                     class_name='BinaryAccuracy',
                     threshold=tfma.MetricThreshold(
@@ -138,6 +154,7 @@ def init_components(
         schema_gen,
         example_validator,
         transform,
+        tuner,
         trainer,
         model_resolver,
         evaluator,
@@ -145,3 +162,4 @@ def init_components(
     )
 
     return components
+    
