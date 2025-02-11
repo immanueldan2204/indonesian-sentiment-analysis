@@ -152,8 +152,8 @@ def tuner_fn(fn_args: FnArgs) -> TunerFnResult:
         fit_kwargs={
             'x': train_set,
             'validation_data': val_set,
-            'steps_per_epoch': fn_args.train_steps,
-            'validation_steps': fn_args.eval_steps,
+            'steps_per_epoch': 1000,
+            'validation_steps': 1000,
             'callbacks': [early_stopping]
         }
     )
